@@ -10,7 +10,7 @@ primitive-types = { version = "0.11.1", default-features = false, features = ["s
 codec = { package = "parity-scale-codec", version = "3.1.2", default-features = false, features = ["derive"] }
 scale-info = { version = "2.0.1", default-features = false, features = ["derive"] }
 gear-lib = { git = "https://github.com/gear-dapps/gear-lib.git", tag = "0.3.0" }
-gear-lib-derive = { git = "https://github.com/gear-dapps/gear-lib.git", tag = "0.3.0" }
+gear-lib-derive = { git = "https://github.com/gear-dapps/gear-lib.git", tag = "0.3.1" }
 on-chain-nft-io = { path = "io" }
 
 [dev-dependencies]
