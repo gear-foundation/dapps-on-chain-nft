@@ -1,13 +1,27 @@
+#![no_std]
+
 use gear_lib::non_fungible_token::{
     io::{NFTApproval, NFTTransfer, NFTTransferPayout},
     royalties::*,
     state::*,
     token::*,
 };
+use gmeta::{In, InOut, Metadata};
 use gstd::{prelude::*, ActorId};
 
 pub type LayerId = u128;
 pub type ItemId = u128;
+
+pub struct ContractMetadata;
+
+impl Metadata for ContractMetadata {
+    type Init = In<InitOnChainNFT>;
+    type Handle = InOut<OnChainNFTAction, OnChainNFTEvent>;
+    type Reply = ();
+    type Others = ();
+    type Signal = ();
+    type State = State;
+}
 
 #[derive(Debug, Encode, Decode, TypeInfo)]
 pub enum OnChainNFTQuery {
@@ -144,4 +158,77 @@ pub enum OnChainNFTEvent {
     Transfer(NFTTransfer),
     TransferPayout(NFTTransferPayout),
     Approval(NFTApproval),
+}
+
+#[derive(Debug, Clone, Default, Encode, Decode, TypeInfo)]
+#[codec(crate = gstd::codec)]
+#[scale_info(crate = gstd::scale_info)]
+pub struct IoNFTState {
+    pub name: String,
+    pub symbol: String,
+    pub base_uri: String,
+    pub owner_by_id: Vec<(TokenId, ActorId)>,
+    pub token_approvals: Vec<(TokenId, Vec<ActorId>)>,
+    pub token_metadata_by_id: Vec<(TokenId, Option<TokenMetadata>)>,
+    pub tokens_for_owner: Vec<(ActorId, Vec<TokenId>)>,
+    pub royalties: Option<Royalties>,
+}
+
+#[derive(Debug, Clone, Default, Encode, Decode, TypeInfo)]
+#[codec(crate = gstd::codec)]
+#[scale_info(crate = gstd::scale_info)]
+pub struct State {
+    pub token: IoNFTState,
+    pub token_id: TokenId,
+    pub owner: ActorId,
+    pub base_image: String,
+    pub layers: Vec<(LayerId, Vec<String>)>,
+    pub nfts: Vec<(TokenId, Vec<ItemId>)>,
+    pub nfts_existence: Vec<String>,
+}
+
+impl From<&NFTState> for IoNFTState {
+    fn from(value: &NFTState) -> Self {
+        let NFTState {
+            name,
+            symbol,
+            base_uri,
+            owner_by_id,
+            token_approvals,
+            token_metadata_by_id,
+            tokens_for_owner,
+            royalties,
+        } = value;
+
+        let owner_by_id = owner_by_id
+            .iter()
+            .map(|(hash, actor_id)| (*hash, *actor_id))
+            .collect();
+
+        let token_approvals = token_approvals
+            .iter()
+            .map(|(key, approvals)| (*key, approvals.iter().copied().collect()))
+            .collect();
+
+        let token_metadata_by_id = token_metadata_by_id
+            .iter()
+            .map(|(id, metadata)| (*id, metadata.clone()))
+            .collect();
+
+        let tokens_for_owner = tokens_for_owner
+            .iter()
+            .map(|(id, tokens)| (*id, tokens.clone()))
+            .collect();
+
+        Self {
+            name: name.clone(),
+            symbol: symbol.clone(),
+            base_uri: base_uri.clone(),
+            owner_by_id,
+            token_approvals,
+            token_metadata_by_id,
+            tokens_for_owner,
+            royalties: royalties.clone(),
+        }
+    }
 }
