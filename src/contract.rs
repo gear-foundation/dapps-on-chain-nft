@@ -1,6 +1,7 @@
 use gear_lib::non_fungible_token::{io::NFTTransfer, nft_core::*, state::*, token::*};
 use gear_lib_derive::{NFTCore, NFTMetaState, NFTStateKeeper};
-use gstd::{msg, prelude::*, ActorId};
+use gmeta::Metadata;
+use gstd::{errors::Result as GstdResult, msg, prelude::*, ActorId, MessageId};
 use hashbrown::{HashMap, HashSet};
 use primitive_types::U256;
 
@@ -182,14 +183,49 @@ impl OnChainNFTCore for OnChainNFT {
     }
 }
 
-gstd::metadata! {
-    title: "OnChainNFT",
-    init:
-        input: InitOnChainNFT,
-    handle:
-        input: OnChainNFTAction,
-        output: OnChainNFTEvent,
-    state:
-        input: OnChainNFTQuery,
-        output: Vec<u8>,
+fn common_state() -> <ContractMetadata as Metadata>::State {
+    let state = static_mut_state();
+    let OnChainNFT {
+        token,
+        token_id,
+        owner,
+        base_image,
+        layers,
+        nfts,
+        nfts_existence,
+    } = state;
+
+    let layers = layers.iter().map(|(k, v)| (*k, v.clone())).collect();
+    let nfts = nfts.iter().map(|(k, v)| (*k, v.clone())).collect();
+    let nfts_existence = nfts_existence.iter().cloned().collect();
+
+    State {
+        token: token.into(),
+        token_id: *token_id,
+        owner: *owner,
+        base_image: base_image.clone(),
+        layers,
+        nfts,
+        nfts_existence,
+    }
+}
+
+fn static_mut_state() -> &'static OnChainNFT {
+    unsafe { CONTRACT.get_or_insert(Default::default()) }
+}
+
+#[no_mangle]
+extern "C" fn state() {
+    reply(common_state())
+        .expect("Failed to encode or reply with `<AppMetadata as Metadata>::State` from `state()`");
+}
+
+#[no_mangle]
+extern "C" fn metahash() {
+    reply(include!("../.metahash"))
+        .expect("Failed to encode or reply with `[u8; 32]` from `metahash()`");
+}
+
+fn reply(payload: impl Encode) -> GstdResult<MessageId> {
+    msg::reply(payload, 0)
 }

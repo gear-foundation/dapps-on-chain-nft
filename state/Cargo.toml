@@ -5,6 +5,7 @@ edition = "2021"
 
 [dependencies]
 gstd = { git = "https://github.com/gear-tech/gear.git", branch = "stable" }
+gear-lib = { git = "https://github.com/gear-dapps/gear-lib.git", tag = "0.3.4" }
 # TODO: pin to the "stable" branch before the merge.
 gmeta = { git = "https://github.com/gear-tech/gear.git", features = ["codegen"] }
 onchain-nft-io = { path = "../io" }

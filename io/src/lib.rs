@@ -161,8 +161,6 @@ pub enum OnChainNFTEvent {
 }
 
 #[derive(Debug, Clone, Default, Encode, Decode, TypeInfo)]
-#[codec(crate = gstd::codec)]
-#[scale_info(crate = gstd::scale_info)]
 pub struct IoNFTState {
     pub name: String,
     pub symbol: String,
@@ -175,8 +173,6 @@ pub struct IoNFTState {
 }
 
 #[derive(Debug, Clone, Default, Encode, Decode, TypeInfo)]
-#[codec(crate = gstd::codec)]
-#[scale_info(crate = gstd::scale_info)]
 pub struct State {
     pub token: IoNFTState,
     pub token_id: TokenId,
@@ -230,5 +226,76 @@ impl From<&NFTState> for IoNFTState {
             tokens_for_owner,
             royalties: royalties.clone(),
         }
+    }
+}
+
+impl IoNFTState {
+    pub fn token(&self, token_id: TokenId) -> Token {
+        let mut token = Token::default();
+        if let Some((_, owner_id)) = self.owner_by_id.iter().find(|(id, _)| token_id.eq(id)) {
+            token.id = token_id;
+            token.owner_id = *owner_id;
+        }
+        if let Some((_, approved_account_ids)) =
+            self.token_approvals.iter().find(|(id, _)| token_id.eq(id))
+        {
+            token.approved_account_ids = approved_account_ids.iter().copied().collect();
+        }
+        if let Some((_, Some(metadata))) = self
+            .token_metadata_by_id
+            .iter()
+            .find(|(id, _)| token_id.eq(id))
+        {
+            token.name = metadata.name.clone();
+            token.description = metadata.description.clone();
+            token.media = metadata.media.clone();
+            token.reference = metadata.reference.clone();
+        }
+        token
+    }
+
+    pub fn tokens_for_owner(&self, owner: &ActorId) -> Vec<Token> {
+        let mut tokens = vec![];
+
+        if let Some((_owner, token_ids)) = self.tokens_for_owner.iter().find(|(id, _)| owner.eq(id))
+        {
+            for token_id in token_ids {
+                tokens.push(self.token(*token_id))
+            }
+        }
+        tokens
+    }
+
+    pub fn total_supply(&self) -> u128 {
+        self.owner_by_id.len() as u128
+    }
+
+    pub fn supply_for_owner(&self, owner: &ActorId) -> u128 {
+        if let Some((_owner, tokens)) = self.tokens_for_owner.iter().find(|(id, _)| owner.eq(id)) {
+            tokens.len() as u128
+        } else {
+            0
+        }
+    }
+
+    pub fn all_tokens(&self) -> Vec<Token> {
+        self.owner_by_id
+            .iter()
+            .map(|(token_id, _toks)| self.token(*token_id))
+            .collect()
+    }
+
+    pub fn approved_tokens(&self, account: &ActorId) -> Vec<Token> {
+        self.owner_by_id
+            .iter()
+            .filter_map(|(id, _)| {
+                self.token_approvals
+                    .iter()
+                    .find(|(token_id, _)| id.eq(token_id))
+                    .and_then(|(id, approvals)| {
+                        approvals.contains(account).then_some(self.token(*id))
+                    })
+            })
+            .collect()
     }
 }
