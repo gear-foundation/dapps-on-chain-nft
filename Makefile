@@ -33,7 +33,7 @@ pre-commit: fmt lint full-test
 
 test: build
 	@echo ──────────── Run tests ────────────────────────
-	@cargo +nightly test --release
+	@cargo +nightly t
 
 full-test:
 	@echo ⚙️ Running all tests...
