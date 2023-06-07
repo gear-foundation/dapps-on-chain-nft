@@ -1,0 +1,3 @@
+(function() {var implementors = {
+"onchain_nft_io":[["impl <a class=\"trait\" href=\"https://doc.rust-lang.org/nightly/core/clone/trait.Clone.html\" title=\"trait core::clone::Clone\">Clone</a> for <a class=\"struct\" href=\"onchain_nft_io/struct.State.html\" title=\"struct onchain_nft_io::State\">State</a>"],["impl <a class=\"trait\" href=\"https://doc.rust-lang.org/nightly/core/clone/trait.Clone.html\" title=\"trait core::clone::Clone\">Clone</a> for <a class=\"struct\" href=\"onchain_nft_io/struct.IoNFTState.html\" title=\"struct onchain_nft_io::IoNFTState\">IoNFTState</a>"]]
+};if (window.register_implementors) {window.register_implementors(implementors);} else {window.pending_implementors = implementors;}})()

@@ -1,0 +1,1 @@
+window.ALL_CRATES = ["on_chain_nft","onchain_nft_io","onchain_nft_state"];
