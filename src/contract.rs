@@ -87,13 +87,15 @@ impl OnChainNFTCore for OnChainNFT {
     ///  where each index represents a layer id, and element represents a layer item id.
     /// `metadata` - is the default metadata provided by gear-lib.
     fn mint(&mut self, description: Vec<ItemId>, metadata: TokenMetadata) -> NFTTransfer {
-        // precheck if the layers actually exist
+        // precheck if description has all layers provided
+        if description.len() != self.layers.len() {
+            panic!("The number of layers must be equal to the number of layers in the contract");
+        }
+
+        // precheck if the layer items actually exist
         for (layer_id, layer_item_id) in description.iter().enumerate() {
-            if layer_id > self.layers.len() {
-                panic!("No such layer");
-            }
             if *layer_item_id
-                > self
+                >= self
                     .layers
                     .get(&(layer_id as u128))
                     .expect("No such layer")
@@ -101,11 +103,6 @@ impl OnChainNFTCore for OnChainNFT {
             {
                 panic!("No such item");
             }
-        }
-
-        // also check if description has all layers provided
-        if description.len() != self.layers.len() {
-            panic!("The number of layers must be equal to the number of layers in the contract");
         }
 
         // precheck if there is already an nft with such description
